@@ -12,7 +12,8 @@ npm install
 knex migrate:up
 ```
 # Test script
+```
 node .\scan_simple.js
-
+```
 For testing, I use the program DB Browser for SQLite. Knex allows us to change databases later if we want, but I find SQLlite easiest to test with.
 https://sqlitebrowser.org/
