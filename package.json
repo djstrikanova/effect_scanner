@@ -1,0 +1,21 @@
+{
+  "name": "effect_scanner",
+  "version": "1.0.0",
+  "description": "Scans Effect SDK for new Task Batches",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@effectai/effect-js": "^0.3.21",
+    "knex": "^2.3.0",
+    "lodash": "^4.17.21",
+    "sqlite3": "^5.1.2"
+  },
+  "devDependencies": {
+    "dotenv": "^16.0.3"
+  }
+}
