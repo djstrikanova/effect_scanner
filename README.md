@@ -24,4 +24,9 @@ So far, only ones I set are
 ```
 NODE_ENV=sqlite3
 BURNER_PRIVATE_KEY=<my_BSC_burner_wallet_private_key>
+DISCORD_TOKEN=<private token given for your Discord App>
+DISCORD_GUILD_ID=<target server id>
+DISCORD_CLIENT_ID=<discord bot client ID>
+DISCORD_TARGET_CHANNEL_ID=<target channel ID>
 ```
+Enable Discord Dev Mode to copy and paste necessary ID's.
