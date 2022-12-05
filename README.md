@@ -18,6 +18,8 @@ node .\scan_simple.js
 For testing, I use the program DB Browser for SQLite. Knex allows us to change databases later if we want, but I find SQLlite easiest to test with.
 https://sqlitebrowser.org/
 
+The logic of the scan is simple, an array of all batches is stored in SQLite DB. If on a new scan the new batch array is larger than the one in the database, that means there was a new batch added. So select all the unique batches in the new batch array and send a message. 
+
 # ENV Variables
 
 So far, only ones I set are
