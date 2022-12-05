@@ -3,23 +3,37 @@ const _ = require('lodash')
 
 const EffectScanner = require('./lib/EffectScanner')
 const Effect_DB = require('./data/dbknex')
+const EffectDiscord = require('./lib/EffectDiscord')
 const db = new Effect_DB()
 
 let account = null
-
 let selectCampaignIDS = [16,43]
 
+let discord = null
+
+let test_channels = [process.env.DISCORD_TARGET_CHANNEL_ID]
 
 const main = async () => {
     await initEffect()
+    await initDiscord()
     await scanCampaigns(selectCampaignIDS)
+    await logoutDiscord()
 }
 
 main()
 
 async function initEffect(){
-    account = new EffectScanner();
+    account = new EffectScanner(process.env.BURNER_PRIVATE_KEY);
     await account.connect();
+}
+
+async function initDiscord(){
+    discord = new EffectDiscord()
+    await discord.initEffectDiscord(process.env.DISCORD_TOKEN)
+}
+
+async function logoutDiscord(){
+    await discord.logout()
 }
 
 async function getAllCampaigns(){
@@ -60,6 +74,16 @@ async function scanCampaigns(campaign_ids){
                     if(db_campaign_batches.length < batches.length) {
                         let new_batches = _.differenceBy(batches, db_campaign_batches, 'batch_id')
                         console.log("Found New Batches: ", new_batches)
+                        for (let j = 0; j < new_batches.length; j++) {
+                            let batch = new_batches[j]
+                            await discord.sendForceNotifToChannels(test_channels, "Found New Batches: "
+                                + "\nCampaign URL: https://app.effect.network/campaigns/" + batch.campaign_id
+                                + "\nBatch URL: https://app.effect.network/campaigns/" + batch.campaign_id + "/" + batch.batch_id
+                                + "\nNum Tasks: " + batch.num_tasks + " -- Repetitions: " + batch.repetitions + " -- Tasks Done: " + batch.tasks_done
+                                + "\nStatus: " + batch.status
+                            )
+                        }
+
                     }else{
                         console.log("No New Batches Found for Campaign: ", campaign.id)
                     }
