@@ -30,3 +30,5 @@ DISCORD_CLIENT_ID=<discord bot client ID>
 DISCORD_TARGET_CHANNEL_ID=<target channel ID>
 ```
 Enable Discord Dev Mode to copy and paste necessary ID's.
+
+Create Discord App: https://discord.com/developers/applications
