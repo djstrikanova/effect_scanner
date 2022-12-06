@@ -1,5 +1,5 @@
 // Update with your config settings.
-require('dotenv').config()
+require('dotenv').config({ path: __dirname + '/.env' })
 
 const location = process.env.SQLITE_DB_LOCATION || './data/app.db';
 const migrationsLoc = process.env.KNEX_MIGRATIONS_LOCATION || './data/migrations';
