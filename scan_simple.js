@@ -8,12 +8,12 @@ const db = new Effect_DB()
 
 let account = null
 let selectCampaignIDS = [16,43]
-let useSelected = false
+let useSelected = true
 
 
 let discord = null
 
-let test_channels = [process.env.DISCORD_TARGET_CHANNEL_ID]
+let test_channel = process.env.DISCORD_TARGET_CHANNEL_ID
 
 const main = async () => {
     await initEffect()
@@ -24,18 +24,27 @@ const main = async () => {
 
 main()
 
+const sendTestMessage = async () => {
+        await initDiscord()
+        await discord.sendForceNotifToChannel(test_channel, "Test")
+        await logoutDiscord()
+}
+
+// sendTestMessage()
+
 async function initEffect(){
     account = new EffectScanner(process.env.BURNER_PRIVATE_KEY);
     await account.connect();
 }
 
+
 async function initDiscord(){
     discord = new EffectDiscord()
-    await discord.initEffectDiscord(process.env.DISCORD_TOKEN)
+    return await discord.login(process.env.DISCORD_TOKEN)
 }
 
 async function logoutDiscord(){
-    await discord.logout()
+    return await discord.logout()
 }
 
 async function getAllCampaigns(){
@@ -82,7 +91,7 @@ async function scanCampaigns(campaign_ids){
                         console.log("Found New Batches: ", new_batches)
                         for (let j = 0; j < new_batches.length; j++) {
                             let batch = new_batches[j]
-                            await discord.sendForceNotifToChannels(test_channels, "Found New Batches: "
+                            await discord.sendForceNotifToChannel(test_channel, "Found New Batches: "
                                 + "\nCampaign URL: https://app.effect.network/campaigns/" + batch.campaign_id
                                 + "\nBatch URL: https://app.effect.network/campaigns/" + batch.campaign_id + "/" + batch.batch_id
                                 + "\nNum Tasks: " + batch.num_tasks + " -- Repetitions: " + batch.repetitions + " -- Tasks Done: " + batch.tasks_done
