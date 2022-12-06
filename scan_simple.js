@@ -1,4 +1,4 @@
-require('dotenv').config()
+const dotenv = require('dotenv').config({ path: __dirname + '/.env' })
 const _ = require('lodash')
 
 const EffectScanner = require('./lib/EffectScanner')
