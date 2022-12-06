@@ -2,7 +2,7 @@ const dotenv = require('dotenv').config({ path: __dirname + '/.env' })
 const _ = require('lodash')
 
 const EffectScanner = require('./lib/EffectScanner')
-const Effect_DB = require('./data/dbknex')
+const Effect_DB = require('./dbknex')
 const EffectDiscord = require('./lib/EffectDiscord')
 const db = new Effect_DB()
 
