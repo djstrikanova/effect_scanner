@@ -10,8 +10,13 @@ https://knexjs.org/guide/migrations.html
 ```
 npm install
 knex migrate:up
+
+## On linux you may need to do (don't forget to set env vars)
+
+npx knex migrate:up
+
 ```
-# Test script
+# Test script (Node 18+ required for Discordjs)
 ```
 node .\scan_simple.js
 ```
