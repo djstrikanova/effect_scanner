@@ -1,7 +1,7 @@
 // Update with your config settings.
 require('dotenv').config()
 
-const location = process.env.SQLITE_DB_LOCATION || './data/app.db';
+const location = process.env.SQLITE_DB_LOCATION || './db/app.db';
 const migrationsLoc = process.env.KNEX_MIGRATIONS_LOCATION || './data/migrations';
 const seedsLoc = process.env.KNEX_SEEDS_LOCATION || './data/seeds';
 

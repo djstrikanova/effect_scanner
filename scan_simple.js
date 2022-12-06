@@ -8,6 +8,8 @@ const db = new Effect_DB()
 
 let account = null
 let selectCampaignIDS = [16,43]
+let useSelected = false
+
 
 let discord = null
 
@@ -53,10 +55,14 @@ async function scanCampaigns(campaign_ids){
     let campaigns = await getAllCampaigns()
     try{
         //Filter Valid Campaigns
-        let campaigns_to_scan = _.filter(campaigns.rows, function(campaign) {
-            return _.includes(campaign_ids, campaign.id)
-        })
-
+        let campaigns_to_scan = []
+        if(useSelected) {
+            campaigns_to_scan = _.filter(campaigns.rows, function (campaign) {
+                return _.includes(campaign_ids, campaign.id)
+            })
+        }else{
+            campaigns_to_scan = campaigns.rows;
+        }
         //Get Batches For Campaigns and Upsert them
         for (let i = 0; i < campaigns_to_scan.length; i++) {
             try {
