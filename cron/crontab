@@ -1,1 +1,1 @@
-* * * * * sh ~/effect_scanner/cron/scan.sh > ~/effect_scanner/scan_simple.log 2>&1
+*/5 * * * * sh ~/effect_scanner/cron/scan.sh > ~/effect_scanner/cron.log 2>&1
