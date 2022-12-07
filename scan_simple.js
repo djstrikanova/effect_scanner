@@ -9,7 +9,7 @@ const db = new Effect_DB()
 
 let account = null
 let selectCampaignIDS = [16,43]
-let useSelected = true
+let useSelected = false
 
 
 let discord = null
