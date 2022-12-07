@@ -1,5 +1,6 @@
 const dotenv = require('dotenv').config({ path: __dirname + '/.env' })
 const _ = require('lodash')
+const striptags = require('striptags');
 
 const EffectScanner = require('./lib/EffectScanner')
 const Effect_DB = require('./dbknex')
@@ -9,7 +10,7 @@ const db = new Effect_DB()
 
 let account = null
 let selectCampaignIDS = [16,43]
-let useSelected = false
+let useSelected = true
 
 
 let discord = null
@@ -90,6 +91,10 @@ async function scanCampaigns(campaign_ids){
             try {
                 let campaign = campaigns_to_scan[i]
                 let batches = await account.getCampaignBatches(campaign.id)
+                let campaign_name = "error"
+                try{
+                    campaign_name = striptags(campaign.info.title)
+                }catch(e){console.log(e)}
 
                 //Check if campaign exists in db, and get batches if it does
                 if(await db.campaignExists(campaign.id)){
@@ -105,7 +110,7 @@ async function scanCampaigns(campaign_ids){
 
                         for (let j = 0; j < new_batches.length; j++) {
                             let batch = new_batches[j]
-                            let notifMessage = "Found New Batches: "
+                            let notifMessage = "Found New Batches: " + campaign_name
                                 + "\nCampaign URL: https://app.effect.network/campaigns/" + batch.campaign_id
                                 + "\nBatch URL: https://app.effect.network/campaigns/" + batch.campaign_id + "/" + batch.batch_id
                                 + "\nNum Tasks: " + batch.num_tasks + " -- Repetitions: " + batch.repetitions + " -- Tasks Done: " + batch.tasks_done

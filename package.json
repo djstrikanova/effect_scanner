@@ -15,6 +15,7 @@
     "knex": "^2.3.0",
     "lodash": "^4.17.21",
     "sqlite3": "^5.1.2",
+    "striptags": "^3.2.0",
     "telegraf": "^4.11.2"
   },
   "devDependencies": {
