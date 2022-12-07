@@ -4,6 +4,7 @@ const _ = require('lodash')
 const EffectScanner = require('./lib/EffectScanner')
 const Effect_DB = require('./dbknex')
 const EffectDiscord = require('./lib/EffectDiscord')
+const EffectTelegram = require('./lib/EffectTelegram')
 const db = new Effect_DB()
 
 let account = null
@@ -12,31 +13,43 @@ let useSelected = true
 
 
 let discord = null
+let telegram_bot = null
 
-let test_channel = process.env.DISCORD_TARGET_CHANNEL_ID
+let target_discord_channel = process.env.DISCORD_TARGET_CHANNEL_ID
+let target_telegram_channel = process.env.TELEGRAM_TARGET_CHANNEL_ID
 
 const main = async () => {
     await initEffect()
     await initDiscord()
+    await initTelegram()
     await scanCampaigns(selectCampaignIDS)
     await logoutDiscord()
 }
 
 main()
 
-const sendTestMessage = async () => {
+const sendTestDiscordMessage = async () => {
         await initDiscord()
-        await discord.sendForceNotifToChannel(test_channel, "Test")
+        await discord.sendForceNotifToChannel(target_discord_channel, "Test")
         await logoutDiscord()
 }
 
-// sendTestMessage()
+const sendTestTelegramMessage = async () => {
+    initTelegram()
+    await telegram_bot.send_channel_message(target_telegram_channel, "Test")
+
+}
+// sendTestDiscordMessage()
+// sendTestTelegramMessage()
 
 async function initEffect(){
     account = new EffectScanner(process.env.BURNER_PRIVATE_KEY);
     await account.connect();
 }
 
+function initTelegram(){
+    telegram_bot = new EffectTelegram(process.env.TELEGRAM_BOT_TOKEN)
+}
 
 async function initDiscord(){
     discord = new EffectDiscord()
@@ -63,7 +76,7 @@ async function viewCampaignBatches(id){
 async function scanCampaigns(campaign_ids){
     let campaigns = await getAllCampaigns()
     try{
-        //Filter Valid Campaigns
+        //Filter Valid Campaigns if useSelected is true
         let campaigns_to_scan = []
         if(useSelected) {
             campaigns_to_scan = _.filter(campaigns.rows, function (campaign) {
@@ -89,15 +102,22 @@ async function scanCampaigns(campaign_ids){
                     if(db_campaign_batches.length < batches.length) {
                         let new_batches = _.differenceBy(batches, db_campaign_batches, 'batch_id')
                         console.log("Found New Batches: ", new_batches)
+
                         for (let j = 0; j < new_batches.length; j++) {
                             let batch = new_batches[j]
-                            await discord.sendForceNotifToChannel(test_channel, "Found New Batches: "
+                            let notifMessage = "Found New Batches: "
                                 + "\nCampaign URL: https://app.effect.network/campaigns/" + batch.campaign_id
                                 + "\nBatch URL: https://app.effect.network/campaigns/" + batch.campaign_id + "/" + batch.batch_id
                                 + "\nNum Tasks: " + batch.num_tasks + " -- Repetitions: " + batch.repetitions + " -- Tasks Done: " + batch.tasks_done
                                 + "\nStatus: " + batch.status
-                            )
+
+                            //Send Discord Channel Message
+                            await discord.sendForceNotifToChannel(target_discord_channel,notifMessage)
+                            //Send Telegram Channel Message
+                            await telegram_bot.send_channel_message(target_telegram_channel, notifMessage)
                         }
+
+
 
                     }else{
                         console.log("No New Batches Found for Campaign: ", campaign.id)
