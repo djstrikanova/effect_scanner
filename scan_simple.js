@@ -175,10 +175,6 @@ async function scanBatches(num){
 
                         //Update Discord Message with new Tasks Done
                         if (db_batch.discord_message_id > 0) {
-                            let prependDiscord = ""
-                            if(batch.batch_value >= minBatchValueEFX_Worker_Ping){
-                                prependDiscord = "@Worker "
-                            }
 
 
                             console.log("Editing Discord Message ID: " + db_batch.discord_message_id)
