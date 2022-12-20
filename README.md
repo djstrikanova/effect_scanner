@@ -41,6 +41,8 @@ DISCORD_TOKEN=<private token given for your Discord App>
 DISCORD_GUILD_ID=<target server id>
 DISCORD_CLIENT_ID=<discord bot client ID>
 DISCORD_TARGET_CHANNEL_ID=<target channel ID>
+# ID of Role to be Pinged
+WORKER_DISCORD_ROLE=<discord role ID>
 
 #Telegram Bot Token
 TELEGRAM_BOT_TOKEN=<your generated bot token>

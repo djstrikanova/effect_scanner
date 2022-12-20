@@ -14,7 +14,7 @@ let ignoreCampaignIDS = _.split(process.env.IGNORED_CAMPAIGNS, ',')
 let minBatchValueEFX = process.env.MIN_BATCH_VALUE_EFX
 let minBatchValueEFX_Worker_Ping = process.env.MIN_BATCH_VALUE_EFX_WORKER_PING
 let useSelected = process.env.USE_FILTERED_CAMPAIGNS === "true"
-
+let workerRoleID = process.env.WORKER_DISCORD_ROLE_ID
 
 let discord = null
 let telegram_bot = null
@@ -33,7 +33,6 @@ const main = async () => {
     await initDiscord()
     await initTelegram()
     await scanBatches(scan_batch_size, selectCampaignIDS,dryRun)
-
     await db.destroy()
     await logoutDiscord()
 }
@@ -42,7 +41,8 @@ main()
 
 const sendTestDiscordMessage = async () => {
         await initDiscord()
-        await discord.sendForceNotifToChannel(target_discord_channel, "Test")
+        let result = await discord.sendForceNotifToChannel(target_discord_channel, "<@&"+ workerRoleID +"> Test2")
+        console.log(result)
         await logoutDiscord()
 }
 
@@ -148,7 +148,7 @@ async function scanBatches(num){
                 let prependDiscord = ""
                 let prependTelegram = ""
                 if(batch.batch_value >= minBatchValueEFX_Worker_Ping){
-                    prependDiscord = "@Worker "
+                    prependDiscord = "<@&"+ workerRoleID +"> "
                 }
 
                 //Check if Batch Exists in DB
