@@ -12,6 +12,7 @@ let account = null
 let selectCampaignIDS = _.split(process.env.SELECTED_CAMPAIGNS, ',')
 let ignoreCampaignIDS = _.split(process.env.IGNORED_CAMPAIGNS, ',')
 let minBatchValueEFX = process.env.MIN_BATCH_VALUE_EFX
+let minBatchValueEFX_Worker_Ping = process.env.MIN_BATCH_VALUE_EFX_WORKER_PING
 let useSelected = process.env.USE_FILTERED_CAMPAIGNS === "true"
 
 
@@ -143,6 +144,13 @@ async function scanBatches(num){
             console.log("Reward: ", batch.reward_amount + " EFX")
             if(batch.batch_value >= minBatchValue) {
                 console.log("Batch Value "+ batch.batch_value + " EFX >= minBatchValue " + minBatchValue + " EFX")
+
+                let prependDiscord = ""
+                let prependTelegram = ""
+                if(batch.batch_value >= minBatchValueEFX_Worker_Ping){
+                    prependDiscord = "@Worker "
+                }
+
                 //Check if Batch Exists in DB
                 let db_batch = await db.getBatch(batch.batch_id)
                 if (db_batch) {
@@ -167,15 +175,21 @@ async function scanBatches(num){
 
                         //Update Discord Message with new Tasks Done
                         if (db_batch.discord_message_id > 0) {
+                            let prependDiscord = ""
+                            if(batch.batch_value >= minBatchValueEFX_Worker_Ping){
+                                prependDiscord = "@Worker "
+                            }
+
+
                             console.log("Editing Discord Message ID: " + db_batch.discord_message_id)
-                            await discord.editMessage(target_discord_channel, db_batch.discord_message_id, await generateBatchMessage(campaign_name, batch, "@Worker "))
+                            await discord.editMessage(target_discord_channel, db_batch.discord_message_id, await generateBatchMessage(campaign_name, batch, prependDiscord))
                         } else {
                             console.log("No Discord Message ID, skipping (DRY RUN PULLED BATCH")
                         }
                         //Update Telegram Message with new Tasks Done
                         if (db_batch.telegram_message_id > 0) {
                             console.log("Editing Telegram Message ID: " + db_batch.telegram_message_id)
-                            await telegram_bot.edit_channel_message(target_telegram_channel, db_batch.telegram_message_id, await generateBatchMessage(campaign_name, batch, ""))
+                            await telegram_bot.edit_channel_message(target_telegram_channel, db_batch.telegram_message_id, await generateBatchMessage(campaign_name, batch, prependTelegram))
                         } else {
                             console.log("No Telegram Message ID, skipping (DRY RUN PULLED BATCH")
                         }
@@ -197,7 +211,7 @@ async function scanBatches(num){
                         //Get Campaign Name
                         let campaign_name = await account.getCampaignName(batch.campaign_id)
 
-                        let discordNotifMessage = await generateBatchMessage(campaign_name, batch, "@Worker ")
+                        let discordNotifMessage = await generateBatchMessage(campaign_name, batch, prependDiscord)
                         console.log(discordNotifMessage)
 
                         //Send Discord Channel Message
@@ -206,7 +220,7 @@ async function scanBatches(num){
                         console.log("Discord Message ID: ", discord_message_id)
                         await db.setBatchDiscordMessageId(batch.batch_id, discord_message_id)
 
-                        let telegramNotifMessage = await generateBatchMessage(campaign_name, batch, "")
+                        let telegramNotifMessage = await generateBatchMessage(campaign_name, batch, prependTelegram)
 
                         //Send Telegram Channel Message
                         let telegram_message = await telegram_bot.send_channel_message(target_telegram_channel, telegramNotifMessage)

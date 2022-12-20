@@ -55,7 +55,9 @@ IGNORED_CAMPAIGNS=
 #Select a Minimum Batch Value for Batch to show a message
 #Example 100 => Only show batches with a total value in rewards of 100 EFX or more
 MIN_BATCH_VALUE_EFX=
-
+#Select a Minimum Batch Value for Discord workers to be pinged with @Worker
+#Example 50 => Only Batches with a total value of EFX in rewards of 50 EFX or more will ping workers
+MIN_BATCH_VALUE_EFX_WORKER_PING=50
 
 ```
 Enable Discord Dev Mode to copy and paste necessary ID's.
