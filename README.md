@@ -1,10 +1,12 @@
 # effect_scanner
-This is a simple scanner that checks if the list of batches of a campaign have changed since the last scan. Intended for use with Telegram and Discord to make a notification bot.
+This is a simple scanner to do notifications for Effect Workers on Discord and Telegram when a new batch of tasks is available.
 
 # This uses Knex
 https://knexjs.org/
 
 https://knexjs.org/guide/migrations.html
+
+* On linux you may need a direct path set for SQLITE_DB_LOCATION for it to work properly.
 
 # Initial Setup
 ```
@@ -32,7 +34,7 @@ So far, only ones I set are
 # Set false to not send Discord/Telegram Messages
 DRY_RUN=false
 
-
+SQLITE_DB_LOCATION=<direct_path_where_you_want_db_to_be_stored>
 NODE_ENV=sqlite3
 BURNER_PRIVATE_KEY=<my_BSC_burner_wallet_private_key>
 DISCORD_TOKEN=<private token given for your Discord App>
@@ -59,3 +61,6 @@ MIN_BATCH_VALUE_EFX=
 Enable Discord Dev Mode to copy and paste necessary ID's.
 
 Create Discord App: https://discord.com/developers/applications
+
+# Cron Jobs
+For this script to work as intended, cron jobs need to be set up that periodically run the scan_simple.js script. I had issues setting up the cronjob and ended up having to use NVM to make sure I had the exact right version of node calling the script. I've provided examples of how to set up the cron stuff, but you may need to do something differently.
