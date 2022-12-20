@@ -168,14 +168,14 @@ async function scanBatches(num){
                         //Update Discord Message with new Tasks Done
                         if (db_batch.discord_message_id > 0) {
                             console.log("Editing Discord Message ID: " + db_batch.discord_message_id)
-                            await discord.editMessage(target_discord_channel, db_batch.discord_message_id, await generateBatchMessage(campaign_name, batch))
+                            await discord.editMessage(target_discord_channel, db_batch.discord_message_id, await generateBatchMessage(campaign_name, batch, "@Worker "))
                         } else {
                             console.log("No Discord Message ID, skipping (DRY RUN PULLED BATCH")
                         }
                         //Update Telegram Message with new Tasks Done
                         if (db_batch.telegram_message_id > 0) {
                             console.log("Editing Telegram Message ID: " + db_batch.telegram_message_id)
-                            await telegram_bot.edit_channel_message(target_telegram_channel, db_batch.telegram_message_id, await generateBatchMessage(campaign_name, batch))
+                            await telegram_bot.edit_channel_message(target_telegram_channel, db_batch.telegram_message_id, await generateBatchMessage(campaign_name, batch, ""))
                         } else {
                             console.log("No Telegram Message ID, skipping (DRY RUN PULLED BATCH")
                         }
