@@ -1,5 +1,5 @@
 # effect_scanner
-This is a simple scanner to do notifications for Effect Workers on Discord and Telegram when a new batch of tasks is available.
+This is a simple scanner to do notifications for Effect Workers on Discord and Telegram when a new batch of tasks is available. It will also update that message when that batch data is updated, so workers will be able to see which batches have been completed and which still have tasks available.
 
 # This uses Knex
 https://knexjs.org/
@@ -25,7 +25,7 @@ node .\scan_simple.js
 For testing, I use the program DB Browser for SQLite. Knex allows us to change databases later if we want, but I find SQLlite easiest to test with.
 https://sqlitebrowser.org/
 
-An array of all collected batches is stored in a SQLite DB. The script pulls from [getBatches](https://effectai.github.io/effect-js/classes/Force.html#getBatches) to collect X number of batches to be scanned. It is recommended to first run a full scan with "DRY_RUN" set to true. This will store all batches into the DB. Afterwards, in all subsequent runs "DRY_RUN" can be set to false which would result in messages being sent to specified Discord and Telegram channels whenever a new batch is scanned. When a pulled batch is different, the DB entry is updated and the Discord and Telegram messages updated as well.   
+All collected batches are stored in a SQLite DB. The script pulls from [getBatches](https://effectai.github.io/effect-js/classes/Force.html#getBatches) to collect X number of batches to be scanned. It is recommended to first run a full scan with "DRY_RUN" set to true. This will store all batches into the DB. Afterwards, in all subsequent runs "DRY_RUN" can be set to false which would result in messages being sent to specified Discord and Telegram channels whenever a new batch is scanned. When a pulled batch is different, the DB entry is updated and the Discord and Telegram messages updated as well.   
 
 # ENV Variables
 
