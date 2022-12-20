@@ -197,17 +197,19 @@ async function scanBatches(num){
                         //Get Campaign Name
                         let campaign_name = await account.getCampaignName(batch.campaign_id)
 
-                        let notifMessage = await generateBatchMessage(campaign_name, batch)
-                        console.log(notifMessage)
+                        let discordNotifMessage = await generateBatchMessage(campaign_name, batch, "@Worker ")
+                        console.log(discordNotifMessage)
 
                         //Send Discord Channel Message
-                        let discord_message = await discord.sendForceNotifToChannel(target_discord_channel, notifMessage)
+                        let discord_message = await discord.sendForceNotifToChannel(target_discord_channel, discordNotifMessage)
                         let discord_message_id = discord_message.id
                         console.log("Discord Message ID: ", discord_message_id)
                         await db.setBatchDiscordMessageId(batch.batch_id, discord_message_id)
 
+                        let telegramNotifMessage = await generateBatchMessage(campaign_name, batch, "")
+
                         //Send Telegram Channel Message
-                        let telegram_message = await telegram_bot.send_channel_message(target_telegram_channel, notifMessage)
+                        let telegram_message = await telegram_bot.send_channel_message(target_telegram_channel, telegramNotifMessage)
                         let telegram_message_id = telegram_message.message_id
                         console.log("Telegram Message ID: ", telegram_message_id)
                         await db.setBatchTelegramMessageId(batch.batch_id, telegram_message_id)
@@ -230,10 +232,10 @@ async function scanBatches(num){
 
 }
 
-async function generateBatchMessage(campaign_name, batch){
+async function generateBatchMessage(campaign_name, batch, prepend){
     let notifMessage = "Error Generating Message"
     try {
-        notifMessage = "Campaign: " + campaign_name
+        notifMessage = prepend + "Campaign: " + campaign_name
             // + "\nCampaign ID: " + batch.campaign_id
             + "\nReward/Task: " + batch.reward_amount + " EFX"
             + "\nTotal EFX Rewards: " + batch.batch_value + " EFX"
