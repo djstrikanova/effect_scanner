@@ -108,8 +108,6 @@ async function scanBatches(num,campaign_ids, dryRun = true){
     let numBatchesDB = await db.numBatches()
     console.log("Num DB Batches: ", numBatchesDB)
 
-    if(numBatchesDB > 0){firstBatch = false}
-
     for (let i = 0; i < filtered_batches.length; i++) {
         let campaign_name = "error"
         let batch = filtered_batches[i]
