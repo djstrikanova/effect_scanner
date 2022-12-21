@@ -39,16 +39,16 @@ const main = async () => {
 
 main()
 
-const sendTestDiscordMessage = async () => {
+const sendTestDiscordMessage = async (message) => {
         await initDiscord()
-        let result = await discord.sendForceNotifToChannel(target_discord_channel, "<@&"+ workerRoleID +"> Test2")
+        let result = await discord.sendForceNotifToChannel(target_discord_channel, message)
         console.log(result)
         await logoutDiscord()
 }
 
-const sendTestTelegramMessage = async () => {
+const sendTestTelegramMessage = async (message) => {
     initTelegram()
-    await telegram_bot.send_channel_message(target_telegram_channel, "Test")
+    await telegram_bot.send_channel_message(target_telegram_channel, message)
 
 }
 // sendTestDiscordMessage()
