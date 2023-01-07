@@ -51,6 +51,31 @@ class Scanner_DB {
         }).onConflict('batch_id').merge(['updated_at', 'batch_json_str'])
     }
 
+    async upsertMeta(meta_name, meta_json_str){
+        return this.knexdb("meta").insert({
+            name: meta_name,
+            created_at: new Date(),
+            updated_at: new Date(),
+            json_str: meta_json_str,
+        }).onConflict('name').merge(['updated_at', 'json_str'])
+    }
+
+    async getMeta(meta_name) {
+        let meta = await this.knexdb("meta").where({name:meta_name}).first()
+        return meta.json_str
+    }
+    async getApprovedMeta(){
+        let approved = await this.getMeta("approved")
+        try{
+            approved = JSON.parse(approved)
+        }catch (e){
+            approved = {"campaigns":[], "requesters":[]}
+            console.log(e)
+        }
+        return approved
+    }
+
+
     async setBatchDiscordMessageId(batch_id, discord_message_id){
         return this.knexdb("batch_scan").where({batch_id:batch_id}).update({
             discord_message_id: discord_message_id

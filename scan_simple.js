@@ -25,19 +25,36 @@ let scan_batch_size = process.env.SCAN_BATCH_SIZE
 
 let target_discord_channel = process.env.DISCORD_TARGET_CHANNEL_ID
 let target_telegram_channel = process.env.TELEGRAM_TARGET_CHANNEL_ID
-
+let approved_only = process.env.APPROVED_ONLY === "true"
 
 
 const main = async () => {
     await initEffect()
+    await syncApproved();
     await initDiscord()
     await initTelegram()
-    await scanBatches(scan_batch_size, selectCampaignIDS,dryRun)
+    let approved = await db.getApprovedMeta();
+
+    console.log(approved)
+    if(_.size(approved.campaigns) === 0 && _.size(approved.requesters) === 0){
+        console.log("No Approved Campaigns or Requesters. Notifications Stopped Until Fixed")
+    }else{
+        await scanBatches(scan_batch_size, selectCampaignIDS,dryRun)
+    }
+
     await db.destroy()
     await logoutDiscord()
 }
 
 main()
+
+async function syncApproved() {
+    let approved = await account.getApproved()
+    console.log(approved)
+    await db.upsertMeta("approved",approved)
+}
+
+
 
 const sendTestDiscordMessage = async (message) => {
         await initDiscord()
@@ -123,6 +140,10 @@ async function scanBatches(num){
     for (let i = 0; i < filtered_batches.length; i++) {
         let batch = filtered_batches[i]
 
+        //Check if Approved
+        console.log(batch)
+        let approved = await db.getApprovedMeta()
+
         //Get Batch Value in EFX
         batch.total_tasks =  batch.num_tasks * batch.repetitions
         try{
@@ -174,22 +195,25 @@ async function scanBatches(num){
                         let campaign_name = await account.getCampaignName(batch.campaign_id)
 
                         //Update Discord Message with new Tasks Done
-                        if (db_batch.discord_message_id > 0) {
-
-
-                            console.log("Editing Discord Message ID: " + db_batch.discord_message_id)
-                            await discord.editMessage(target_discord_channel, db_batch.discord_message_id, await generateBatchMessage(campaign_name, batch, prependDiscord))
-                        } else {
-                            console.log("No Discord Message ID, skipping (DRY RUN PULLED BATCH")
+                        if(!dryRun) {
+                            batch = await setBatchApproved(batch, approved)
+                            //Only Display Approved if Env is set
+                            if(!approved_only || (batch.approved_owner || batch.campaign_id_approved)) {
+                                if (db_batch.discord_message_id > 0) {
+                                    console.log("Editing Discord Message ID: " + db_batch.discord_message_id)
+                                    await discord.editMessage(target_discord_channel, db_batch.discord_message_id, await generateBatchMessage(campaign_name, batch, prependDiscord))
+                                } else {
+                                    console.log("No Discord Message ID, skipping (DRY RUN PULLED BATCH")
+                                }
+                                //Update Telegram Message with new Tasks Done
+                                if (db_batch.telegram_message_id > 0) {
+                                    console.log("Editing Telegram Message ID: " + db_batch.telegram_message_id)
+                                    await telegram_bot.edit_channel_message(target_telegram_channel, db_batch.telegram_message_id, await generateBatchMessage(campaign_name, batch, prependTelegram))
+                                } else {
+                                    console.log("No Telegram Message ID, skipping (DRY RUN PULLED BATCH")
+                                }
+                            }
                         }
-                        //Update Telegram Message with new Tasks Done
-                        if (db_batch.telegram_message_id > 0) {
-                            console.log("Editing Telegram Message ID: " + db_batch.telegram_message_id)
-                            await telegram_bot.edit_channel_message(target_telegram_channel, db_batch.telegram_message_id, await generateBatchMessage(campaign_name, batch, prependTelegram))
-                        } else {
-                            console.log("No Telegram Message ID, skipping (DRY RUN PULLED BATCH")
-                        }
-
                     } else {
                         console.log("No Changes for Batch")
                     }
@@ -202,6 +226,9 @@ async function scanBatches(num){
                     await db.upsertBatchScan(batch)
                     //If First Batch in DB, do not send Telegram or Discord Messages
                     if (!dryRun) {
+                        batch = await setBatchApproved(batch, approved)
+                        console.log(batch)
+                        console.log(approved)
                         //If not first batch, send Telegram and Discord Messages
                         console.log("Not dry run, sending messages")
                         //Get Campaign Name
@@ -210,20 +237,21 @@ async function scanBatches(num){
                         let discordNotifMessage = await generateBatchMessage(campaign_name, batch, prependDiscord)
                         console.log(discordNotifMessage)
 
-                        //Send Discord Channel Message
-                        let discord_message = await discord.sendForceNotifToChannel(target_discord_channel, discordNotifMessage)
-                        let discord_message_id = discord_message.id
-                        console.log("Discord Message ID: ", discord_message_id)
-                        await db.setBatchDiscordMessageId(batch.batch_id, discord_message_id)
+                        if(!approved_only || (batch.approved_owner || batch.campaign_id_approved)) {
+                            //Send Discord Channel Message
+                            let discord_message = await discord.sendForceNotifToChannel(target_discord_channel, discordNotifMessage)
+                            let discord_message_id = discord_message.id
+                            console.log("Discord Message ID: ", discord_message_id)
+                            await db.setBatchDiscordMessageId(batch.batch_id, discord_message_id)
 
-                        let telegramNotifMessage = await generateBatchMessage(campaign_name, batch, prependTelegram)
+                            let telegramNotifMessage = await generateBatchMessage(campaign_name, batch, prependTelegram)
 
-                        //Send Telegram Channel Message
-                        let telegram_message = await telegram_bot.send_channel_message(target_telegram_channel, telegramNotifMessage)
-                        let telegram_message_id = telegram_message.message_id
-                        console.log("Telegram Message ID: ", telegram_message_id)
-                        await db.setBatchTelegramMessageId(batch.batch_id, telegram_message_id)
-
+                            //Send Telegram Channel Message
+                            let telegram_message = await telegram_bot.send_channel_message(target_telegram_channel, telegramNotifMessage)
+                            let telegram_message_id = telegram_message.message_id
+                            console.log("Telegram Message ID: ", telegram_message_id)
+                            await db.setBatchTelegramMessageId(batch.batch_id, telegram_message_id)
+                        }
                     } else {
                         console.log("Dry run, not sending messages")
                     }
@@ -241,16 +269,50 @@ async function scanBatches(num){
 
 
 }
+async function setBatchApproved(batchObj, approved){
+    try{
+        //Check Campaign ID
+        batchObj.campaign_id_approved = _.includes(approved.campaigns, batchObj.campaign_id)
+
+
+        //Check Requester ID
+        await account.getCampaign(batchObj.campaign_id).then((campaign) => {
+            batchObj.campaign_owner = _.last(campaign.owner)
+            batchObj.approved_owner = _.includes(approved.requesters, batchObj.campaign_owner)
+        })
+    } catch(err){
+        console.log(err)
+    }
+
+    return batchObj
+}
+
 
 async function generateBatchMessage(campaign_name, batch, prepend){
     let notifMessage = "Error Generating Message"
+
+    let approvedStatusMsg = "\nWARNING: Unmoderated, complete at your own risk!"
     try {
-        notifMessage = prepend + "Campaign: " + campaign_name
+        if (batch.campaign_id_approved || batch.approved_owner) {
+            approvedStatusMsg = "\nAPPROVED: Moderated Campaign ID or Requester."
+        }
+        else{prepend = ""}
+    }catch(err){
+        prepend = ""
+        console.log(err)
+    }
+
+    console.log(batch)
+    try {
+        notifMessage = ""
+            + prepend
+            + "\nCampaign: " + campaign_name
+            + approvedStatusMsg
+            + "\nCampaign URL: https://app.effect.network/campaigns/" + batch.campaign_id
+            + "\nBatch URL: https://app.effect.network/campaigns/" + batch.campaign_id + "/" + batch.batch_id
             // + "\nCampaign ID: " + batch.campaign_id
             + "\nReward/Task: " + batch.reward_amount + " EFX"
             + "\nTotal EFX Rewards: " + batch.batch_value + " EFX"
-            + "\nCampaign URL: https://app.effect.network/campaigns/" + batch.campaign_id
-            + "\nBatch URL: https://app.effect.network/campaigns/" + batch.campaign_id + "/" + batch.batch_id
             + "\nNum Tasks: " + batch.num_tasks + " -- Repetitions: " + batch.repetitions + " -- Tasks Done: " + batch.tasks_done
             + "\nStatus: " + batch.status
     }catch(e){console.log(e)}
